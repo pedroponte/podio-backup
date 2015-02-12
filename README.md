@@ -3,6 +3,15 @@ podio-backup
 
 Creating a "maximum complete" backup of data stored at Podio (including files).
 
+Forked from https://github.com/daniel-sc/podio-backup
+
+The differences are:
+The backup will download always to the same folder (i.e., no timestamp) so you can push daily the changes to a git repository.
+The memory size limit was increased to 500M to support larger podio repositories.
+
+Originally based on:
+-------------------------
+
 This runs as php commandline script (cli) and is based on: http://www.podiomail.com/blog/easy-podio-full-backup.php (thanks!)
 
 A superior (hosted) backup solution is found at https://www.cloud-backup-for-podio.com (check it out!).
@@ -28,7 +37,8 @@ Usage:
        -s	store parameters in PARAMETER_FILE
        -l	load parameters from PARAMETER_FILE (parameters can be overwritten by command line parameters)
      
-    BACKUP_FOLDER represents a (incremental) backup storage. I.e. consecutive backups only downloads new files.
+    BACKUP_FOLDER represents an incremental backup storage, i.e. consecutive backups will only download new files.
+    The backup will download always to the same folder (i.e., no timestamp) so you can push daily  changes to a git repository.
 
 Installation:
 ------------------
