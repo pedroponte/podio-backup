@@ -2,11 +2,12 @@
 
 /* =====================================================================
  * podio_backup.php
- * This script backs up your entire Podio account.
+ * This script backs up your entire Podio account incrementally
  * [(c) 2013 Globi Web Solutions]
  * v1.3 2013-10-03 - Andreas Huttenrauch
  * v1.4 2013-10-18 - Daniel Schreiber
  * v2.0 2013-10-31 - Daniel Schreiber
+ * v2.1 2015-02-12 - Pedro Ponte
  * 
  *
  *  https://github.com/daniel-sc/podio-backup 
@@ -28,7 +29,7 @@ define('ITEM_XLSX_LIMIT', 500);
 Podio::$debug = true;
 
 gc_enable();
-ini_set("memory_limit", "200M");
+ini_set("memory_limit", "500M");
 
 global $start;
 $start = time();
@@ -50,8 +51,7 @@ $usage = "\nUsage:\n\n" .
         "   -s\tstore parameters in PARAMETER_FILE\n" .
         "   -l\tload parameters from PARAMETER_FILE (parameters can be overwritten by command line parameters)\n" .
         " \n" .
-        "BACKUP_FOLDER represents a (incremental) backup storage. " .
-        "I.e. consecutive backups only downloads new files.\n";
+        "BACKUP_FOLDER represents an incremental backup storage, i.e., consecutive backups will download new files.\n";
 
 if (array_key_exists("help", $config_command_line)) {
     echo $usage;
@@ -174,7 +174,10 @@ function backup_app($app, $path, $downloadFiles) {
         echo "debug: MEMORY: " . memory_get_usage(true) . " | " . memory_get_usage(false) . "\n";
     }
 
-    mkdir($path_app);
+    
+    if (!file_exists($path_app)) {
+        mkdir($path_app);
+    }
 
     $appFile = "";
 
@@ -219,7 +222,10 @@ function backup_app($app, $path, $downloadFiles) {
 
             $folder_item = fixDirName($item->item_id . '_' . $item->title);
             $path_item = $path_app . '/' . $folder_item;
-            mkdir($path_item);
+            
+            if (!file_exists($path_item)) {
+                mkdir($path_item);
+            }
 
             unset($itemFile);
 
@@ -275,7 +281,10 @@ function backup_app($app, $path, $downloadFiles) {
             echo "storing non item/comment files..\n";
         $app_files_folder = 'other_files';
         $path_app_files = $path_app . '/' . $app_files_folder;
-        mkdir($path_app_files);
+        
+        if (!file_exists($path_app_files)) {
+                mkdir($path_app_files);
+        }
         $files_in_app_html .= "<tr><td><b>App Files</b></td><td><a href=$app_files_folder>" . $app_files_folder . "</a></td><td></td></tr>";
         foreach ($appFiles as $file) {
             if ($file->context['type'] != 'item' && $file->context['type'] != 'comment') {
@@ -308,9 +317,13 @@ function do_backup($downloadFiles) {
     $timeStamp = date('Y-m-d_H-i');
     $backupTo = $config['backupTo'];
 
-    $path_base = $backupTo . '/' . $timeStamp;
+    $path_base = $backupTo;
 
-    mkdir($path_base);
+    if (!file_exists($path_base)) {
+        mkdir($path_base, 0755, true);
+    }
+ 
+    file_put_contents($path_app . '/timestamp.txt', "back up at:".$timeStamp.PHP_EOL,FILE_APPEND);
 
     $podioOrgs = PodioOrganization::get_all();
 
@@ -318,7 +331,10 @@ function do_backup($downloadFiles) {
         if ($verbose)
             echo "Org: " . $org->name . "\n";
         $path_org = $path_base . '/' . fixDirName($org->name);
-        mkdir($path_org);
+        if (!file_exists($path_org)) {
+          mkdir($path_org);
+        }
+        
 
         $contactsFile = '';
         try {
@@ -334,7 +350,10 @@ function do_backup($downloadFiles) {
             if ($verbose)
                 echo "Space: " . $space->name . "\n";
             $path_space = $path_org . '/' . fixDirName($space->name);
-            mkdir($path_space);
+           
+            if (!file_exists($path_space)) {
+                mkdir($path_space);
+            }
 
             $contactsFile = '';
             try {
