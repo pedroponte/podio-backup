@@ -479,8 +479,9 @@ function downloadFileIfHostedAtPodio($folder, $file) {
             $filestore = unserialize(file_get_contents($filenameFilestore));
         }
         $filename = fixDirName($file->name);
-        while (file_exists($folder . '/' . $filename))
-            $filename = 'Z' . $filename;
+        //while (file_exists($folder . '/' . $filename)) 
+        //commented to remove the file renaming to allow override
+            //$filename = 'Z' . $filename;
         if (array_key_exists($file->file_id, $filestore)) {
 
             echo "DEBUG: Detected duplicate download for file: $file->file_id\n";
